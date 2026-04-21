@@ -5,13 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
   <link href="//fonts.googleapis.com/css?family=Roboto:400,100,700,900" rel="stylesheet" type="text/css">
-  
   <link href="./blocked.png" rel="icon" type="image/png">
   <link id="pwa-manifest" rel="manifest" href="./manifest.json">
-  
   <meta name="theme-color" content="#000000">
   <style>
-    @supports (font: -apple-system-body) { html { font: -apple-system-body; } }
     html { height: 100%; overflow: hidden; }
     body { margin: 0; padding: 0; background-color: #3E3E3E; background: radial-gradient(ellipse at center, #707070 13%, #333333 100%); font-family: 'Roboto', sans-serif; height: 100vh; }
     .outer { display: table; position: absolute; height: 100%; width: 100%; }
@@ -23,12 +20,18 @@
       background-position: center center;
       background-image: url('./blocked.png');
     }
-    .content h1 { color: #00AAD7; font-size: 2.5em; margin: 0; margin-bottom: -20px; }
+    .content h1 { color: #00AAD7; font-size: 2.5em; margin-bottom: -10px; }
+    #install-btn { 
+      margin-top: 20px; padding: 10px 25px; font-size: 0.6em; 
+      background: #00AAD7; border: none; color: white; border-radius: 5px;
+      cursor: pointer; display: none; font-weight: 700;
+    }
+    #install-btn:hover { background: #008cb1; }
   </style>
 </head>
 <body>
 
-  <div id="browser-block" style="display:none;">
+  <div id="browser-block">
     <div class="outer">
       <div class="middle">
         <div class="content">
@@ -36,6 +39,8 @@
             <h1><strong>RESTRICTED!</strong></h1>
             <br />
             This website has been blocked by Cheddar Hobbs.
+            <br />
+            <button id="install-btn">INSTALL APP TO ACCESS</button>
           </div>
         </div>
       </div>
@@ -43,39 +48,51 @@
   </div>
 
 <script>
+  const isInstallable = true;
   const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const statusArea = document.getElementById('status-area');
+  const installBtn = document.getElementById('install-btn');
+  let deferredPrompt;
 
-  if (!isPWA) {
-    document.title = 'RESTRICTED!';
-    document.getElementById('browser-block').style.display = 'block';
-  } else {
-    const blockScreen = document.getElementById('browser-block');
-    const statusArea = document.getElementById('status-area');
-    
+  if (isInstallable && !isPWA) {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') installBtn.style.display = 'none';
+        deferredPrompt = null;
+      }
+    });
+  }
+
+  if (isPWA) {
     document.body.style.background = "#1a1a1a";
     statusArea.innerHTML = `
-      <h1><strong>TRANSFERRING...</strong></h1>
+      <h1><strong>LAUNCHING...</strong></h1>
       <br />Opening window in 5 seconds.
-      <p style="font-size: 0.6em; margin-top: 20px; color: #888;">(Tap anywhere to ensure it launches)</p>
+      <p style="font-size: 0.5em; margin-top: 20px; color: #888;">(Tap anywhere to ensure it launches)</p>
     `;
-    blockScreen.style.display = 'block';
 
     setTimeout(function() {
-        const newWindow = window.open('', '_blank', 'width=300,height=200');
+        const newWindow = window.open('', '_blank', 'width=900,height=550,menubar=no,status=no,location=no');
 
         if (newWindow) {
-            // Write content to the new small window
             newWindow.document.write('<style>body{background:#111;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif;}</style>');
             newWindow.document.write('<h1>Hi</h1>');
             newWindow.document.close();
 
-            // Close the current loading tab/PWA window
-            window.open('', '_self', ''); // Chrome/PWA hack to allow closing
+            window.open('', '_self', ''); 
             window.close();
         } else {
             statusArea.innerHTML = `
               <h1 style="color: #ff4444;"><strong>POP-UP BLOCKED</strong></h1>
-              <br />Please allow pop-ups and restart the app.
+              <br />Please allow pop-ups for this app and restart.
             `;
         }
     }, 5000);
