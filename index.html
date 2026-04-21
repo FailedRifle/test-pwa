@@ -45,64 +45,46 @@
 
 <script>
   const isInstallable = true;
-  const maintenanceMode = false;
-  const targetWidth = 900;
-  const targetHeight = 550;
-
   const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-  if (!isInstallable) {
-    const manifest = document.getElementById('pwa-manifest');
-    if (manifest) manifest.remove();
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      return false;
-    });
-  }
-
-  if (isPWA) {
-    // 1. Setup the "Transferring" UI immediately
+  // Handle Non-PWA view
+  if (!isPWA) {
+    document.title = 'RESTRICTED!';
+    document.getElementById('browser-block').style.display = 'block';
+  } else {
     const blockScreen = document.getElementById('browser-block');
     const contentDiv = blockScreen.querySelector('.content');
     
     document.body.style.background = "#1a1a1a";
     contentDiv.style.backgroundImage = "none";
     contentDiv.innerHTML = `
-      <h1><strong>TRANSFERRING...</strong></h1>
-      <br />Opening destination in 5 seconds.
-      <p style="font-size: 0.6em; margin-top: 20px; color: #888;">(Click anywhere to ensure pop-up works)</p>
+      <h1><strong>LAUNCHING...</strong></h1>
+      <br />The window will open in 5 seconds. v1
+      <p style="font-size: 0.6em; margin-top: 20px; color: #888;">(Tap anywhere to ensure it opens)</p>
     `;
     blockScreen.style.display = 'block';
 
-    // 2. The 5-second handoff logic
     setTimeout(function() {
-        const newWindow = window.open("https://www.google.com", "_blank");
+        const newWindow = window.open('', '_blank', 'width=300,height=200');
 
         if (newWindow) {
-            window.open('', '_self', ''); 
-            window.close();
+            newWindow.document.write('<style>body{background:#000;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif;}</style>');
+            newWindow.document.write('<h1>Hi</h1>');
+            newWindow.document.close();
+
+            contentDiv.innerHTML = `<h1><strong>ACTIVE</strong></h1><br />Check the secondary window.`;
         } else {
             contentDiv.innerHTML = `
               <h1 style="color: #ff4444;"><strong>BLOCKED</strong></h1>
-              <br />Please enable pop-ups for the PWA and try again.
+              <br />Please enable pop-ups in your settings and restart the app.
             `;
         }
     }, 5000);
-
-    // Optional: If you still want the iframe logic to run in the background 
-    // or as a backup, you would put it here. But for a clean redirect, 
-    // we stop here.
-
-  } else {
-    document.title = 'RESTRICTED!';
-    document.getElementById('browser-block').style.display = 'block';
   }
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(reg => console.log('SW registered'))
-        .catch(err => console.error('SW failed'));
+      navigator.serviceWorker.register('./service-worker.js').catch(err => console.error('SW failed'));
     });
   }
 </script>
