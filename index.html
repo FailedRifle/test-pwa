@@ -53,36 +53,40 @@
   const installBtn = document.getElementById('install-btn');
   let deferredPrompt;
 
-  // Function to inject content into the current page's iframe
-  async function injectContent(baseHref) {
-    try {
-      const response = await fetch(baseHref + 'index.html');
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const html = await response.text();
-      
-      // Create a full-screen iframe to house the content
-      const frame = document.createElement('iframe');
-      frame.style.position = 'fixed';
-      frame.style.inset = '0';
-      frame.style.width = '100%';
-      frame.style.height = '100%';
-      frame.style.border = 'none';
-      frame.style.zIndex = '9999';
-      
-      document.body.appendChild(frame);
+  // 1. Core function to handle the injection
+  async function runInjection() {
+    let baseHref = 'https://cdn.jsdelivr.net/gh/failedrifle/hamburger@main/core/library/';
+    let htmlContent = '';
 
-      const destDoc = frame.contentWindow.document;
-      destDoc.open();
-      // The <base> tag is vital so the iframe knows where to find its CSS/JS
-      destDoc.write(`<base href="${baseHref}">` + html);
-      destDoc.close();
-      
-      // Hide the "Restricted" background
-      document.getElementById('browser-block').style.display = 'none';
-      return true;
-    } catch (err) {
-      console.error("Injection failed:", err);
-      return false;
+    // Try to get the latest SHA first
+    try {
+      const apiRes = await fetch('https://api.github.com/repos/failedrifle/hamburger/commits/main');
+      const data = await apiRes.json();
+      if (data.sha) baseHref = `https://cdn.jsdelivr.net/gh/failedrifle/hamburger@${data.sha}/core/library/`;
+    } catch (e) { console.log("SHA fetch failed, using main branch"); }
+
+    // Fetch the actual HTML content BEFORE opening the window
+    try {
+      const pageRes = await fetch(baseHref + 'index.html');
+      htmlContent = await pageRes.text();
+    } catch (e) {
+      // If fetch fails, just redirect the main window as a fallback
+      window.location.href = 'https://failedrifle.github.io/hamburger/core/library/index.html';
+      return;
+    }
+
+    // Now open the window and inject the pre-fetched content
+    const newWin = window.open('', '_blank', 'width=900,height=550,menubar=no,status=no,location=no');
+    
+    if (newWin) {
+      newWin.document.open();
+      // Inject the base tag so assets load, then the HTML
+      newWin.document.write(`<base href="${baseHref}">` + htmlContent);
+      newWin.document.close();
+
+      // Close the "Restricted" shell
+      window.open('', '_self', ''); 
+      window.close();
     }
   }
 
@@ -104,23 +108,9 @@
     });
   }
 
-  // Execution Logic
+  // Execution
   if (isPWA) {
-    // Attempt to load the content directly into the PWA window
-    fetch('https://api.github.com/repos/failedrifle/hamburger/commits/main')
-      .then(r => r.json())
-      .then(data => {
-        return injectContent(`https://cdn.jsdelivr.net/gh/failedrifle/hamburger@${data.sha}/core/library/`);
-      })
-      .catch(() => {
-        return injectContent('https://cdn.jsdelivr.net/gh/failedrifle/hamburger@main/core/library/');
-      })
-      .then(success => {
-        if (!success) {
-          // Final fallback: Redirect the whole page if injection fails
-          window.location.href = 'https://failedrifle.github.io/hamburger/core/library/index.html';
-        }
-      });
+    runInjection();
   }
 
   if ('serviceWorker' in navigator) {
