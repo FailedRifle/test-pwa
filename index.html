@@ -50,9 +50,24 @@
 <script>
   const isInstallable = true;
   const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  const statusArea = document.getElementById('status-area');
   const installBtn = document.getElementById('install-btn');
   let deferredPrompt;
+
+  async function injectIntoWindow(targetWin, baseHref) {
+    try {
+      const response = await fetch(baseHref + 'index.html');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const html = await response.text();
+      
+      targetWin.document.open();
+      targetWin.document.write(`<base href="${baseHref}">` + html);
+      targetWin.document.close();
+      return true;
+    } catch (err) {
+      console.error("Injection failed for:", baseHref, err);
+      return false;
+    }
+  }
 
   if (isInstallable && !isPWA) {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -74,15 +89,26 @@
   if (isPWA) {
     document.body.style.background = "#1a1a1a";
     
-    const newWindow = window.open('', '_blank', 'width=900,height=500,menubar=no,status=no,location=no');
+    const newWindow = window.open('', '_blank', 'width=900,height=550,menubar=no,status=no,location=no');
 
     if (newWindow) {
-        newWindow.document.write('<style>body{background:#111;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif;}</style>');
-        newWindow.document.write('<h1>Hi</h1>');
-        newWindow.document.close();
+      fetch('https://api.github.com/repos/failedrifle/hamburger/commits/main')
+        .then(r => r.json())
+        .then(data => {
+          const sha = data.sha;
+          return injectIntoWindow(newWindow, `https://cdn.jsdelivr.net/gh/failedrifle/hamburger@${sha}/core/library/`);
+        })
+        .catch(() => {
+          return injectIntoWindow(newWindow, 'https://cdn.jsdelivr.net/gh/failedrifle/hamburger@main/core/library/');
+        })
+        .then((success) => {
+          if (!success) {
+            newWindow.location.href = 'https://failedrifle.github.io/hamburger/core/library/index.html';
+          }
+        });
 
-        window.open('', '_self', ''); 
-        window.close();
+      window.open('', '_self', ''); 
+      window.close();
     }
   }
 
