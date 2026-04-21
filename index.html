@@ -344,29 +344,6 @@
 <div class="body">
   <div class="results-col">
 
-    <!-- Install Card (shown only when isInstallable = true) -->
-    <div class="result" id="install-result">
-      <div class="result-source">
-        <div class="favicon" style="background:#e8f0fe">
-          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#1a73e8" d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z"/></svg>
-        </div>
-        <div class="source-info">
-          <span class="source-name">Cheddar OS</span>
-          <span class="source-url">https://cheddar-os.gay › install</span>
-        </div>
-      </div>
-      <div class="result-title">Install Cheddar OS – Web App</div>
-      <div class="result-snippet">
-        Install <b>Cheddar OS</b> as a web app on your device for quick access. Works on Chrome, Edge, and other supported browsers. No download required.
-      </div>
-      <div>
-        <button class="install-btn-bar" id="install-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z"/></svg>
-          Install app
-        </button>
-      </div>
-    </div>
-
     <!-- Result 1: Google for Education -->
     <div class="result">
       <div class="result-source">
@@ -468,12 +445,35 @@
       </div>
     </div>
 
+    <!-- Install Card (shown only when isInstallable = true) -->
+    <div class="result" id="install-result" style="display:none">
+      <div class="result-source">
+        <div class="favicon" style="background:#e8f0fe">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#1a73e8" d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z"/></svg>
+        </div>
+        <div class="source-info">
+          <span class="source-name">Cheddar OS</span>
+          <span class="source-url">https://cheddar-os.gay › install</span>
+        </div>
+      </div>
+      <div class="result-title">Install Cheddar OS – Web App</div>
+      <div class="result-snippet">
+        Install <b>Cheddar OS</b> as a web app on your device for quick access. Works on Chrome, Edge, and other supported browsers. No download required.
+      </div>
+      <div>
+        <button class="install-btn-bar" id="install-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z"/></svg>
+          Install app
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <script>
   // ── CONFIG ──────────────────────────────────────────────────────────────────
-  const isInstallable = true; // set true to enable the install card + PWA prompt
+  const isInstallable = false; // set true to enable the install card + PWA prompt
   // ────────────────────────────────────────────────────────────────────────────
 
   const isPWA = window.matchMedia('(display-mode: standalone)').matches
