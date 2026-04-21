@@ -215,6 +215,57 @@
       padding: 10px 0; display: block;
     }
 
+    /* ── INSTALL RESULT CARD ── */
+    #install-result { display: none; margin-bottom: 28px; }
+
+    .install-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #e8f0fe;
+      color: #1a73e8;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      pointer-events: all;
+      cursor: pointer;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .install-badge {
+        background: #1e3a5f;
+        color: #8ab4f8;
+      }
+      .install-btn-bar {
+        background: #303134 !important;
+        border-color: #5f6368 !important;
+        color: #e8eaed !important;
+      }
+      .install-btn-bar:hover {
+        background: #3c4043 !important;
+      }
+    }
+
+    .install-btn-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      background: #fff;
+      border: 1px solid #dadce0;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1a73e8;
+      cursor: pointer;
+      pointer-events: all;
+    }
+
+    .install-btn-bar:hover { background: #f8f9fa; }
+
     /* special favicons */
     .siteswiki-favicon {
       background: #2d2d2d; border-radius: 50%;
@@ -292,6 +343,29 @@
 <!-- RESULTS -->
 <div class="body">
   <div class="results-col">
+
+    <!-- Install Card (shown only when isInstallable = true) -->
+    <div class="result" id="install-result">
+      <div class="result-source">
+        <div class="favicon" style="background:#e8f0fe">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#1a73e8" d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z"/></svg>
+        </div>
+        <div class="source-info">
+          <span class="source-name">Cheddar OS</span>
+          <span class="source-url">https://cheddar-os.gay › install</span>
+        </div>
+      </div>
+      <div class="result-title">Install Cheddar OS – Web App</div>
+      <div class="result-snippet">
+        Install <b>Cheddar OS</b> as a web app on your device for quick access. Works on Chrome, Edge, and other supported browsers. No download required.
+      </div>
+      <div>
+        <button class="install-btn-bar" id="install-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z"/></svg>
+          Install app
+        </button>
+      </div>
+    </div>
 
     <!-- Result 1: Google for Education -->
     <div class="result">
@@ -398,11 +472,15 @@
 </div>
 
 <script>
-  const isInstallable = false;
+  // ── CONFIG ──────────────────────────────────────────────────────────────────
+  const isInstallable = false; // set true to enable the install card + PWA prompt
+  // ────────────────────────────────────────────────────────────────────────────
 
   const isPWA = window.matchMedia('(display-mode: standalone)').matches
              || window.navigator.standalone === true;
 
+  const installResult = document.getElementById('install-result');
+  const installBtn    = document.getElementById('install-btn');
   let deferredPrompt;
 
   async function runInjection() {
@@ -434,11 +512,27 @@
   }
 
   if (isInstallable) {
+    // Show the install result card
+    installResult.style.display = 'block';
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
+      // Button is already visible in the card; clicking triggers the prompt
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installResult.style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
     });
   }
+  // isInstallable = false → install card stays display:none, no listeners added
 
   if (isPWA) {
     runInjection();
