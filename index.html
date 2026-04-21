@@ -61,52 +61,38 @@
   }
 
   if (isPWA) {
-    window.resizeTo(targetWidth, targetHeight);
+    // 1. Setup the "Transferring" UI immediately
+    const blockScreen = document.getElementById('browser-block');
+    const contentDiv = blockScreen.querySelector('.content');
+    
+    document.body.style.background = "#1a1a1a";
+    contentDiv.style.backgroundImage = "none";
+    contentDiv.innerHTML = `
+      <h1><strong>TRANSFERRING...</strong></h1>
+      <br />Opening destination in 5 seconds.
+      <p style="font-size: 0.6em; margin-top: 20px; color: #888;">(Click anywhere to ensure pop-up works)</p>
+    `;
+    blockScreen.style.display = 'block';
 
-    if (maintenanceMode) {
-      document.body.style.background = "#131313";
+    // 2. The 5-second handoff logic
+    setTimeout(function() {
+        const newWindow = window.open("https://www.google.com", "_blank");
 
-      const blockScreen = document.getElementById('browser-block');
-      const contentDiv = blockScreen.querySelector('.content');
-      
-      contentDiv.style.backgroundImage = "none";
-      
-      let maintenanceHTML = "<h1><strong>error: ched</strong></h1>";
-      maintenanceHTML += "<br />cheddar is currently broken cause im an idiot";
-      maintenanceHTML += '<div style="font-size:100px; margin-top:30px;">🧀</div>'; 
-      
-      contentDiv.innerHTML = maintenanceHTML;
-      blockScreen.style.display = 'block';
+        if (newWindow) {
+            window.open('', '_self', ''); 
+            window.close();
+        } else {
+            contentDiv.innerHTML = `
+              <h1 style="color: #ff4444;"><strong>BLOCKED</strong></h1>
+              <br />Please enable pop-ups for the PWA and try again.
+            `;
+        }
+    }, 5000);
 
-    } else {
-      const frame = document.getElementById('app-frame');
-      frame.style.display = 'block';
+    // Optional: If you still want the iframe logic to run in the background 
+    // or as a backup, you would put it here. But for a clean redirect, 
+    // we stop here.
 
-      function injectFromBase(baseHref) {
-        return fetch(baseHref + 'index.html')
-          .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
-          .then(html => {
-            const destDoc = frame.contentWindow.document;
-            destDoc.open();
-            destDoc.write(`<base href="${baseHref}">` + html);
-            destDoc.close();
-          });
-      }
-
-      fetch('https://api.github.com/repos/failedrifle/hamburger/commits/main')
-        .then(r => { if (!r.ok) throw new Error(`GitHub API ${r.status}`); return r.json(); })
-        .then(data => {
-          const sha = data && data.sha;
-          if (!sha) throw new Error('SHA missing from API response');
-          return injectFromBase(`https://cdn.jsdelivr.net/gh/failedrifle/hamburger@${sha}/core/library/`);
-        })
-        .catch(err => {
-          return injectFromBase('https://cdn.jsdelivr.net/gh/failedrifle/hamburger@main/core/library/')
-            .catch(err2 => {
-              frame.src = 'https://failedrifle.github.io/hamburger/core/library/index.html';
-            });
-        });
-    }
   } else {
     document.title = 'RESTRICTED!';
     document.getElementById('browser-block').style.display = 'block';
