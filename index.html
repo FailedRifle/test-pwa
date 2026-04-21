@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <link href="./blocked.png" rel="icon" type="image/png">
+  <link href="./favicon.png" rel="icon" type="image/png">
   <link id="pwa-manifest" rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#000000">
   <title>google classroom - Google Search</title>
   <style>
-    /* ── THEME ── */
     :root {
       --bg: #fff;
       --bg2: #f8f9fa;
@@ -152,12 +151,10 @@
       font-weight: 500;
     }
 
-    /* ── BODY ── */
     .body { display: flex; padding: 22px 0 22px 148px; }
 
     .results-col { max-width: 652px; width: 100%; }
 
-    /* ── RESULT ITEMS ── */
     .result { margin-bottom: 28px; }
 
     .result-source {
@@ -191,7 +188,6 @@
     .result-snippet { font-size: 14px; color: var(--text2); line-height: 1.58; }
     .result-snippet b { color: var(--text); font-weight: 700; }
 
-    /* sub-links */
     .sub-links { margin-top: 12px; border-top: 1px solid var(--sub-border); }
 
     .sub-link {
@@ -215,7 +211,6 @@
       padding: 10px 0; display: block;
     }
 
-    /* ── INSTALL RESULT CARD ── */
     #install-result { display: none; margin-bottom: 28px; }
 
     .install-badge {
@@ -427,7 +422,6 @@
       </div>
     </div>
 
-    <!-- Result 4: Google Play -->
     <div class="result">
       <div class="result-source">
         <div class="play-favicon">
@@ -445,7 +439,6 @@
       </div>
     </div>
 
-    <!-- Install Card (shown only when isInstallable = true) -->
     <div class="result" id="install-result" style="display:none">
       <div class="result-source">
         <div class="favicon" style="background:#e8f0fe">
@@ -474,11 +467,9 @@
 <iframe id="app-frame" style="position:fixed;inset:0;width:100%;height:100%;border:none;display:none;"></iframe>
 
 <script>
-  // ── CONFIG ──────────────────────────────────────────────────────────────────
-  const isInstallable = false; // set true to enable install card + PWA prompt
+  const isInstallable = true;
   const targetWidth   = 900;
   const targetHeight  = 550;
-  // ────────────────────────────────────────────────────────────────────────────
 
   const isPWA = window.matchMedia('(display-mode: standalone)').matches
              || window.navigator.standalone === true;
@@ -487,7 +478,6 @@
   const installBtn    = document.getElementById('install-btn');
   let deferredPrompt;
 
-  // ── Suppress the browser's native install button when not installable ──────
   if (!isInstallable) {
     const manifest = document.getElementById('pwa-manifest');
     if (manifest) manifest.remove();
