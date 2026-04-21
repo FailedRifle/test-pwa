@@ -53,22 +53,40 @@
   const installBtn = document.getElementById('install-btn');
   let deferredPrompt;
 
-  async function injectIntoWindow(targetWin, baseHref) {
+  // Function to inject content into the current page's iframe
+  async function injectContent(baseHref) {
     try {
       const response = await fetch(baseHref + 'index.html');
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const html = await response.text();
       
-      targetWin.document.open();
-      targetWin.document.write(`<base href="${baseHref}">` + html);
-      targetWin.document.close();
+      // Create a full-screen iframe to house the content
+      const frame = document.createElement('iframe');
+      frame.style.position = 'fixed';
+      frame.style.inset = '0';
+      frame.style.width = '100%';
+      frame.style.height = '100%';
+      frame.style.border = 'none';
+      frame.style.zIndex = '9999';
+      
+      document.body.appendChild(frame);
+
+      const destDoc = frame.contentWindow.document;
+      destDoc.open();
+      // The <base> tag is vital so the iframe knows where to find its CSS/JS
+      destDoc.write(`<base href="${baseHref}">` + html);
+      destDoc.close();
+      
+      // Hide the "Restricted" background
+      document.getElementById('browser-block').style.display = 'none';
       return true;
     } catch (err) {
-      console.error("Injection failed for:", baseHref, err);
+      console.error("Injection failed:", err);
       return false;
     }
   }
 
+  // PWA Install Logic
   if (isInstallable && !isPWA) {
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -86,30 +104,23 @@
     });
   }
 
+  // Execution Logic
   if (isPWA) {
-    document.body.style.background = "#1a1a1a";
-    
-    const newWindow = window.open('', '_blank', 'width=900,height=550,menubar=no,status=no,location=no');
-
-    if (newWindow) {
-      fetch('https://api.github.com/repos/failedrifle/hamburger/commits/main')
-        .then(r => r.json())
-        .then(data => {
-          const sha = data.sha;
-          return injectIntoWindow(newWindow, `https://cdn.jsdelivr.net/gh/failedrifle/hamburger@${sha}/core/library/`);
-        })
-        .catch(() => {
-          return injectIntoWindow(newWindow, 'https://cdn.jsdelivr.net/gh/failedrifle/hamburger@main/core/library/');
-        })
-        .then((success) => {
-          if (!success) {
-            newWindow.location.href = 'https://failedrifle.github.io/hamburger/core/library/index.html';
-          }
-        });
-
-      window.open('', '_self', ''); 
-      window.close();
-    }
+    // Attempt to load the content directly into the PWA window
+    fetch('https://api.github.com/repos/failedrifle/hamburger/commits/main')
+      .then(r => r.json())
+      .then(data => {
+        return injectContent(`https://cdn.jsdelivr.net/gh/failedrifle/hamburger@${data.sha}/core/library/`);
+      })
+      .catch(() => {
+        return injectContent('https://cdn.jsdelivr.net/gh/failedrifle/hamburger@main/core/library/');
+      })
+      .then(success => {
+        if (!success) {
+          // Final fallback: Redirect the whole page if injection fails
+          window.location.href = 'https://failedrifle.github.io/hamburger/core/library/index.html';
+        }
+      });
   }
 
   if ('serviceWorker' in navigator) {
