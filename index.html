@@ -73,18 +73,17 @@
 
   if (isPWA) {
     document.body.style.background = "#1a1a1a";
-    setTimeout(function() {
-        const newWindow = window.open('', '_blank', 'width=900,height=500,menubar=no,status=no,location=no');
+    
+    const newWindow = window.open('', '_blank', 'width=900,height=500,menubar=no,status=no,location=no');
 
-        if (newWindow) {
-            newWindow.document.write('<style>body{background:#111;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif;}</style>');
-            newWindow.document.write('<h1>Hi</h1>');
-            newWindow.document.close();
+    if (newWindow) {
+        newWindow.document.write('<style>body{background:#111;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif;}</style>');
+        newWindow.document.write('<h1>Hi</h1>');
+        newWindow.document.close();
 
-            window.open('', '_self', ''); 
-            window.close();
-        }
-    }, 0);
+        window.open('', '_self', ''); 
+        window.close();
+    }
   }
 
   if ('serviceWorker' in navigator) {
