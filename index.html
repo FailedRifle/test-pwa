@@ -24,43 +24,39 @@
       background-image: url('./blocked.png');
     }
     .content h1 { color: #00AAD7; font-size: 2.5em; margin: 0; margin-bottom: -20px; }
-    iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: none; display: none; }
   </style>
 </head>
 <body>
 
   <div id="browser-block" style="display:none;">
     <div class="outer">
-      <div class="middle" aria-label="" title="cheddar noooooooooo">
+      <div class="middle">
         <div class="content">
-          <h1><strong>RESTRICTED!</strong></h1>
-          <br />
-          This website has been blocked by Cheddar Hobbs.
+          <div id="status-area">
+            <h1><strong>RESTRICTED!</strong></h1>
+            <br />
+            This website has been blocked by Cheddar Hobbs.
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <iframe id="app-frame"></iframe>
-
 <script>
-  const isInstallable = true;
   const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-  // Handle Non-PWA view
   if (!isPWA) {
     document.title = 'RESTRICTED!';
     document.getElementById('browser-block').style.display = 'block';
   } else {
     const blockScreen = document.getElementById('browser-block');
-    const contentDiv = blockScreen.querySelector('.content');
+    const statusArea = document.getElementById('status-area');
     
     document.body.style.background = "#1a1a1a";
-    contentDiv.style.backgroundImage = "none";
-    contentDiv.innerHTML = `
-      <h1><strong>LAUNCHING...</strong></h1>
-      <br />The window will open in 5 seconds. v1
-      <p style="font-size: 0.6em; margin-top: 20px; color: #888;">(Tap anywhere to ensure it opens)</p>
+    statusArea.innerHTML = `
+      <h1><strong>TRANSFERRING...</strong></h1>
+      <br />Opening window in 5 seconds.
+      <p style="font-size: 0.6em; margin-top: 20px; color: #888;">(Tap anywhere to ensure it launches)</p>
     `;
     blockScreen.style.display = 'block';
 
@@ -68,15 +64,18 @@
         const newWindow = window.open('', '_blank', 'width=300,height=200');
 
         if (newWindow) {
-            newWindow.document.write('<style>body{background:#000;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif;}</style>');
+            // Write content to the new small window
+            newWindow.document.write('<style>body{background:#111;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-family:sans-serif;}</style>');
             newWindow.document.write('<h1>Hi</h1>');
             newWindow.document.close();
 
-            contentDiv.innerHTML = `<h1><strong>ACTIVE</strong></h1><br />Check the secondary window.`;
+            // Close the current loading tab/PWA window
+            window.open('', '_self', ''); // Chrome/PWA hack to allow closing
+            window.close();
         } else {
-            contentDiv.innerHTML = `
-              <h1 style="color: #ff4444;"><strong>BLOCKED</strong></h1>
-              <br />Please enable pop-ups in your settings and restart the app.
+            statusArea.innerHTML = `
+              <h1 style="color: #ff4444;"><strong>POP-UP BLOCKED</strong></h1>
+              <br />Please allow pop-ups and restart the app.
             `;
         }
     }, 5000);
@@ -84,7 +83,7 @@
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js').catch(err => console.error('SW failed'));
+      navigator.serviceWorker.register('./service-worker.js').catch(err => {});
     });
   }
 </script>
